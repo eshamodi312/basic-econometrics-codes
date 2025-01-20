@@ -1,0 +1,12 @@
+# Load dataset
+data <- read.csv("data.csv")
+
+# Convert categorical variables to factors
+data$group <- as.factor(data$group)
+data$time <- as.factor(data$time)
+
+# Fit the Difference-in-Differences model
+did_model <- lm(outcome ~ group + time + group:time, data = data)
+
+# Display the model summary
+summary(did_model)
