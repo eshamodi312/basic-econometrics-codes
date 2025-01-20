@@ -1,0 +1,54 @@
+library(tidyverse) 
+library(lmtest)  
+library(sandwich) 
+
+data <- read.csv("data.csv")
+
+# Fit a linear regression model
+
+model <- lm(y ~ x1 + x2 + x3, data = data)
+
+# 1. Breusch-Pagan test for heteroskedasticity
+#Checks if the variance of residuals depends on its predictors
+bp_test <- bptest(model)
+bp_pval <- bp_test$p.value
+
+# 2. White test for heteroskedasticity
+#checks for heteroskedasticity using robust standard errors
+white_test <- coeftest(model, vcov = vcovHC(model, type = "HC3"))
+white_pval <- white_test[, "Pr(>|t|)"][4]
+
+# 3. Shapiro-Wilk test for normality of residuals
+#Checks if residuals follow a normal distribution
+shapiro_test <- shapiro.test(resid(model))
+shapiro_pval <- shapiro_test$p.value
+
+# Decide the type of standard errors we should use
+if (bp_pval < 0.05 || white_pval < 0.05) {
+  #If heteroskedasticity is present
+  if (shapiro_pval < 0.05) {
+    #If residuals are not normal --> use robust standard errors
+    se_type <- "HC3"
+  } else {
+    # If residuals are normal --> use OLS standard errors
+    se_type <- "OLS"
+  }
+} else {
+  # If errors are homoskedastic --> use OLS standard errors
+  se_type <- "OLS"
+}
+
+# Calculate standard errors based on the chosen method
+# Robust standard errors are calculated if 'se_type' is "HC3"
+if (se_type == "HC3") {
+  se <- sqrt(diag(vcovHC(model, type = "HC3")))
+} else {
+  se <- sqrt(diag(vcov(model)))
+}
+
+# Display the regression summary
+print(summary(model))
+
+# Combine regression coefficients and their standard errors 
+results <- cbind(Coefficients = coefficients(model), StdErrors = se)
+print(results)
