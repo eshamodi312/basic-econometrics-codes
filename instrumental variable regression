@@ -1,0 +1,8 @@
+library(AER)
+
+# Fit an instrumental variable model
+
+iv_model <- ivreg(y ~ x | z, data = data)
+
+# Display the model summary
+summary(iv_model)
