@@ -1,0 +1,38 @@
+# Load libraries
+
+library(tidyverse)
+library(car)
+
+# Import dataset
+data <- read.csv("data.csv")
+
+# Fit  regression model
+model <- lm(y ~ x1 + x2 + x3, data = data)
+
+# Check for multicollinearity using VIF (Variance Inflation Factor)
+vif_values <- vif(model)
+
+# Check if any VIF value is greater than 5 (indicates high multicollinearity)
+if (max(vif_values) > 5) {
+  # High multicollinearity is present
+  
+  # Perform Principal Component Analysis (PCA) on predictors
+  # Assuming the first column is the outcome variable, exclude it from PCA
+  pca_model <- prcomp(data[, -1], scale. = TRUE)
+  
+  # Extract principal component scores (new transformed variables)
+  pc_scores <- as.data.frame(pca_model$x)
+  
+  # Combine the outcome variable with the principal component scores
+  pc_data <- cbind(data$y, pc_scores)
+  
+  # Fit a new regression model using the first few principal components
+  # pc_data[,1] is the outcome, pc_data[,2] and pc_data[,3] are the first two principal components
+  pc_model <- lm(pc_data[, 1] ~ pc_data[, 2] + pc_data[, 3], data = pc_data)
+  
+  # Display summary of the new regression model
+  print(summary(pc_model))
+} else {
+  # No high multicollinearity detected, use the original model
+  print(summary(model))
+}
