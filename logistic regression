@@ -1,0 +1,9 @@
+# Load dataset
+data <- read.csv("data.csv")
+
+# Fit a logistic regression model
+
+logit_model <- glm(binary_outcome ~ x1 + x2 + x3, data = data, family = binomial)
+
+# Display the model summary
+summary(logit_model)
